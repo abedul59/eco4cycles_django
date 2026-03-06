@@ -6,41 +6,40 @@
     <title>總經循環分析系統 - 首頁</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            font-family: "微軟正黑體", sans-serif;
-        }
-        .hero-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; display: flex; align-items: center; font-family: "微軟正黑體", sans-serif; }
+        .hero-card { background: white; border-radius: 20px; padding: 40px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
 <div class="container text-center">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
             <div class="hero-card">
                 <h1 class="display-5 fw-bold mb-3 text-dark">總經循環分析系統</h1>
-                <p class="text-secondary mb-4">
-                    結合《透析經濟，聰明投資》與《景氣循環投資》四大週期理論。自動抓取 FRED 最新數據，即時研判目前全球經濟位階與最佳資產配置策略。
-                </p>
+                <p class="text-secondary mb-4">自動抓取最新數據，即時研判目前全球經濟位階與最佳資產配置策略。</p>
                 
-                <a href="/economic-dashboard/" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm">
-                    🚀 進入終極判定儀表板
+                <a href="/economic-dashboard/?refresh=true" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm w-100 mb-3">
+                    🚀 執行今日最新爬蟲判定
                 </a>
                 
+                <hr class="my-4">
+                
+                <form action="/economic-dashboard/" method="GET" class="text-start">
+                    <label class="form-label fw-bold text-muted">📅 檢視歷史判定紀錄：</label>
+                    <div class="input-group">
+                        <select name="date" class="form-select form-select-lg">
+                            {% for date in history_dates %}
+                                <option value="{{ date|date:'Y-m-d' }}">{{ date|date:'Y-m-d' }}</option>
+                            {% empty %}
+                                <option disabled>目前尚無歷史紀錄</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary">讀取</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
