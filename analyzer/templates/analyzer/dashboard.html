@@ -11,18 +11,18 @@
         .data-card { border: none; border-radius: 10px; background-color: #ffffff; }
         .val-text { font-size: 1.1rem; font-weight: 700; color: #d9534f; margin-top: 5px; }
         .strategy-box { border-left: 5px solid #ffc107; background-color: #fffbe6; padding: 15px; border-radius: 8px;}
+        .details-list li { font-size: 0.85rem; color: #555; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 <div class="container py-4">
-    
     {% if results.error %}
     <div class="alert alert-danger">伺服器發生錯誤: {{ results.error }}</div>
     {% else %}
     
     <div class="card verdict-card shadow-sm mb-4">
         <div class="card-body text-center py-4">
-            <h6 class="text-uppercase opacity-75">當前全球經濟週期</h6>
+            <h6 class="text-uppercase opacity-75">當前全球經濟週期 ({{ results.record_date }})</h6>
             <h2 class="fw-bold my-3">{{ results.verdict }}</h2>
             <p class="mb-0 small opacity-75">數據更新於：{{ results.timestamp }}</p>
         </div>
@@ -33,25 +33,46 @@
         <p class="mb-0 text-secondary" style="font-size: 0.95rem;">{{ results.strategy }}</p>
     </div>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <h6 class="fw-bold mb-3">🎯 各階段特徵觸發統計</h6>
-            <div class="row text-center g-2 small">
-                <div class="col-3"><div class="p-2 bg-light rounded">復甦<br><b>{{ results.scores.recovery }}/4</b></div></div>
-                <div class="col-3"><div class="p-2 bg-light rounded">成長<br><b>{{ results.scores.growth }}/4</b></div></div>
-                <div class="col-3"><div class="p-2 bg-light rounded text-danger">榮景警訊<br><b>{{ results.scores.boom_warning }}/8</b></div></div>
-                <div class="col-3"><div class="p-2 bg-light rounded text-primary">衰退/落底<br><b>{{ results.scores.recession }}/2</b></div></div>
-            </div>
+    <h6 class="fw-bold mb-3 px-1">🎯 週期特徵觸發細節 (數據與敘述)</h6>
+    <div class="accordion mb-4 shadow-sm" id="scoreAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#colRec">🌱 復甦特徵 ({{ results.scores.recovery }}/4)</button></h2>
+            <div id="colRec" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
+                <ul class="details-list mb-0">{% for d in results.details.recovery %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}</ul>
+            </div></div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#colGro">📈 成長特徵 ({{ results.scores.growth }}/4)</button></h2>
+            <div id="colGro" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
+                <ul class="details-list mb-0">{% for d in results.details.growth %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}</ul>
+            </div></div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#colBoom">🔥 榮景轉折警訊 ({{ results.scores.boom_warning }}/8)</button></h2>
+            <div id="colBoom" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
+                <ul class="details-list mb-0">{% for d in results.details.boom_warning %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}</ul>
+            </div></div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#colRecess">🥶 衰退與落底 ({{ results.scores.recession }}/2，曙光 {{ results.scores.bottom }}/3)</button></h2>
+            <div id="colRecess" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
+                <ul class="details-list mb-0">
+                    <b class="text-dark">衰退確認指標：</b>
+                    {% for d in results.details.recession %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}
+                    <b class="text-dark mt-2 d-block">落底曙光指標：</b>
+                    {% for d in results.details.bottom %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}
+                </ul>
+            </div></div>
         </div>
     </div>
 
-    <h6 class="mb-3 fw-bold px-1">📊 全時期 20 大指標監測</h6>
+    <h6 class="mb-3 fw-bold px-1">📊 全時期 20 大指標最新數據面板</h6>
     <div class="row g-2 mb-4">
         {% for key, val in results.raw_data.items %}
         <div class="col-6">
             <div class="card data-card shadow-sm h-100">
                 <div class="card-body p-2 text-center">
-                    <div class="text-muted" style="font-size: 0.75rem;">{{ key }}</div>
+                    <div class="text-muted" style="font-size: 0.70rem;">{{ key }}</div>
                     <div class="val-text">{{ val }}</div>
                 </div>
             </div>
@@ -60,14 +81,13 @@
     </div>
 
     <div class="d-grid gap-2 mb-5">
-        <a href="?export=json" class="btn btn-dark btn-lg shadow-sm">📥 匯出全部數據 (JSON)</a>
-        <button onclick="location.reload()" class="btn btn-outline-primary">🔄 重新整理爬蟲</button>
+        <a href="?date={{ results.record_date }}&export=json" class="btn btn-dark btn-lg shadow-sm">📥 匯出此紀錄 (JSON)</a>
+        <a href="?refresh=true" class="btn btn-outline-primary">🔄 重新執行即時爬蟲</a>
         <a href="{% url 'home' %}" class="btn btn-link text-secondary">回首頁</a>
     </div>
 
     {% endif %}
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
