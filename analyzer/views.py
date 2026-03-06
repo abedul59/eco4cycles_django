@@ -8,6 +8,20 @@ import requests
 import xml.etree.ElementTree as ET
 import os
 
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from .utils import get_comprehensive_data
+
+def economic_dashboard(request):
+    api_key = "31c9ce02b76b2d4e4942671c7f86624a"
+    results = get_comprehensive_data(api_key)
+    
+    if request.GET.get('export') == 'json':
+        return JsonResponse(results, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 4})
+        
+    return render(request, 'dashboard.html', {'results': results})
+
 # ================= 爬蟲與邏輯函式區 =================
 
 def get_google_news_fallback(query):
