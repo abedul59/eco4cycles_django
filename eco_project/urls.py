@@ -21,4 +21,5 @@ from analyzer import views  # 引入我們寫好的視圖
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),  # 將首頁 (空白路徑) 指向 views.home
+    path('economic-dashboard/', views.economic_dashboard, name='dashboard')
 ]
