@@ -1,186 +1,46 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商業循環階段分析系統</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>總經循環分析系統 - 首頁</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
     <style>
-        body { background-color: #f8f9fa; }
-        .stage-card { border-radius: 15px; border: none; transition: transform 0.2s, box-shadow 0.2s; }
-        .stage-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
-        .table-container { border-radius: 15px; overflow: hidden; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .trend-up { color: #dc3545; font-weight: 600; } 
-        .trend-down { color: #198754; font-weight: 600; }
-        .trend-flat { color: #6c757d; }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: "微軟正黑體", sans-serif;
+        }
+        .hero-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
-<body class="container py-4 py-md-5">
-    
+<body>
+
+<div class="container text-center">
     <div class="row justify-content-center">
-        <div class="col-12 col-xl-10">
-            
-            <h1 class="display-6 fw-bold text-center mb-3 text-primary">
-                <i class="bi bi-graph-up-arrow"></i> 總體經濟循環分析
-            </h1>
-            <p class="text-center text-muted mb-4">自動抓取 FRED 數據，跨維度推算當前商業循環階段</p>
-
-            <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mb-5">
-                <form method="POST" class="w-100 m-0">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm rounded-pill py-3" id="runBtn" 
-                            onclick="this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\' role=\'status\' aria-hidden=\'true\'></span>資料抓取與運算中，請稍候...'; this.classList.add('disabled');">
-                        🚀 點擊抓取 FRED 數據分析
-                    </button>
-                </form>
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="hero-card">
+                <h1 class="display-5 fw-bold mb-3 text-dark">總經循環分析系統</h1>
+                <p class="text-secondary mb-4">
+                    結合《透析經濟，聰明投資》與《景氣循環投資》四大週期理論。自動抓取 FRED 最新數據，即時研判目前全球經濟位階與最佳資產配置策略。
+                </p>
                 
-                <button type="button" class="btn btn-outline-secondary btn-lg w-100 shadow-sm rounded-pill py-3 text-nowrap" data-bs-toggle="modal" data-bs-target="#stageInfoModal">
-                    📖 查看四階段完整說明
-                </button>
-            </div>
-
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            {% if record %}
-            
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0 fw-bold"><i class="bi bi-cpu"></i> 模型判定結果</h4>
-                <span class="badge bg-secondary rounded-pill px-3 py-2">分析時間: {{ record.created_at|date:"m/d H:i" }}</span>
-            </div>
-
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="card stage-card bg-primary text-white shadow-sm h-100">
-                        <div class="card-body text-center p-3">
-                            <h6 class="card-title opacity-75 mb-1">3年長期基準</h6>
-                            <h2 class="mb-0 fw-bold">第 {{ record.stage_3y }} 階段</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card stage-card bg-info text-white shadow-sm h-100">
-                        <div class="card-body text-center p-3">
-                            <h6 class="card-title opacity-75 mb-1">1年期基準</h6>
-                            <h2 class="mb-0 fw-bold">第 {{ record.stage_1y }} 階段</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card stage-card bg-warning text-dark shadow-sm h-100">
-                        <div class="card-body text-center p-3">
-                            <h6 class="card-title opacity-75 mb-1">半年中短期</h6>
-                            <h2 class="mb-0 fw-bold">第 {{ record.stage_6m }} 階段</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card stage-card bg-danger text-white shadow-sm h-100">
-                        <div class="card-body text-center p-3">
-                            <h6 class="card-title opacity-75 mb-1">3個月短期</h6>
-                            <h2 class="mb-0 fw-bold">第 {{ record.stage_3m }} 階段</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h4 class="mb-3 fw-bold mt-5"><i class="bi bi-table"></i> 各項指標數據細節</h4>
-            <div class="table-container p-0 mb-5">
-                <div class="table-responsive">
-                    <table class="table table-hover table-borderless align-middle mb-0">
-                        <thead class="table-light border-bottom">
-                            <tr>
-                                <th scope="col" class="ps-3 py-3 text-nowrap">指標名稱</th>
-                                <th scope="col" class="py-3 text-nowrap text-end">最新數值</th>
-                                <th scope="col" class="py-3 text-nowrap text-center">3個月趨勢</th>
-                                <th scope="col" class="py-3 text-nowrap text-center">半年趨勢</th>
-                                <th scope="col" class="pe-3 py-3 text-nowrap text-center">1年趨勢</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for name, data in record.raw_data.items %}
-                            <tr class="border-bottom">
-                                <td class="ps-3 py-3 fw-semibold text-nowrap text-dark">{{ name }}</td>
-                                <td class="py-3 text-end font-monospace text-secondary">{{ data.latest|floatformat:2 }}</td>
-                                
-                                <td class="py-3 text-center text-nowrap">
-                                    {% if data.trends.3個月.trend == '上升' %}
-                                        <span class="trend-up"><i class="bi bi-arrow-up-right"></i> {{ data.trends.3個月.change|floatformat:2 }}%</span>
-                                    {% elif data.trends.3個月.trend == '下降' %}
-                                        <span class="trend-down"><i class="bi bi-arrow-down-right"></i> {{ data.trends.3個月.change|floatformat:2 }}%</span>
-                                    {% else %}
-                                        <span class="trend-flat"><i class="bi bi-dash"></i> 持平</span>
-                                    {% endif %}
-                                </td>
-                                
-                                <td class="py-3 text-center text-nowrap">
-                                    {% if data.trends.6個月.trend == '上升' %}
-                                        <span class="trend-up"><i class="bi bi-arrow-up-right"></i> {{ data.trends.6個月.change|floatformat:2 }}%</span>
-                                    {% elif data.trends.6個月.trend == '下降' %}
-                                        <span class="trend-down"><i class="bi bi-arrow-down-right"></i> {{ data.trends.6個月.change|floatformat:2 }}%</span>
-                                    {% else %}
-                                        <span class="trend-flat"><i class="bi bi-dash"></i> 持平</span>
-                                    {% endif %}
-                                </td>
-
-                                <td class="pe-3 py-3 text-center text-nowrap">
-                                    {% if data.trends.1年.trend == '上升' %}
-                                        <span class="trend-up"><i class="bi bi-arrow-up-right"></i> {{ data.trends.1年.change|floatformat:2 }}%</span>
-                                    {% elif data.trends.1年.trend == '下降' %}
-                                        <span class="trend-down"><i class="bi bi-arrow-down-right"></i> {{ data.trends.1年.change|floatformat:2 }}%</span>
-                                    {% else %}
-                                        <span class="trend-flat"><i class="bi bi-dash"></i> 持平</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
-            
-        </div>
-    </div>
-
-    <div class="modal fade" id="stageInfoModal" tabindex="-1" aria-labelledby="stageInfoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold text-primary" id="stageInfoModalLabel"><i class="bi bi-book"></i> 商業循環四階段完整說明</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body lh-lg" style="font-size: 1.05rem;">
-                    
-                    <h5 class="fw-bold text-primary">【第一階段】從谷底恢復</h5>
-                    <p>當景氣終於從衰退或低度成長的谷底恢復時，就是第一階段的開始。消費者因意識到未來時局可能惡化而採保守的消費態度，此時通貨膨脹就會下降。利率下降，商品價格下跌。不過薪資、利率、原物料成本及通貨膨脹等下滑，有助企業降低成本，企業獲利開始改善。</p>
-
-                    <h5 class="fw-bold text-info mt-4">【第二階段】高度成長</h5>
-                    <p>經濟動能強勁，成長率超過長期潛能。就業、生產、所得及銷售亦快速增加。薪資成長率加速上揚，商品價格有上升壓力。貸款成長率升高，利率將會上揚。落後指標抬頭，警告經濟已經過熱，獲利率因成本升高而面臨壓力。</p>
-
-                    <h5 class="fw-bold text-warning mt-4">【第三階段】成長趨緩</h5>
-                    <p>銷售成長率達到新高，企業獲利卻開始走緩。一旦成本上升，企業削減成本及聯準會減少貨幣供給的努力，將導致銷售量減少。落後指標（通貨膨脹率、利率等）達高峰，是成本終於獲得控制的訊號。</p>
-
-                    <h5 class="fw-bold text-danger mt-4">【第四階段】經濟疲弱但見曙光</h5>
-                    <p>經濟必將走緩，央行緊縮貨幣政策將導致貨幣供給下降。然而，通貨膨脹在達到高峰後逐漸走低。由於聯準會已經達到控制通貨膨脹之目的，遂逐漸改採較為寬鬆的政策，貨幣供給於是再度擴增，經濟具備重新成長的條件。</p>
-                    
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉說明</button>
-                </div>
+                <a href="/economic-dashboard/" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm">
+                    🚀 進入終極判定儀表板
+                </a>
+                
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
