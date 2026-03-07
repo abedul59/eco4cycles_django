@@ -5,6 +5,10 @@ from .utils import get_comprehensive_data
 from .models import EconomicRecord
 import logging
 
+# 請確保檔案最上方有這兩行引入 (如果沒有請補上)
+from django.core.management import call_command
+from django.http import HttpResponse
+
 logger = logging.getLogger(__name__)
 
 def home(request):
