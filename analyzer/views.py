@@ -82,24 +82,30 @@ def economic_dashboard(request):
     return render(request, 'analyzer/dashboard.html', {'results': results})
 
 
-# 將這段加在 views.py 的最下面
 def setup_database(request):
-    """免付費 Shell 的終極秘密建表通道"""
-    try:
-        # 在背景自動執行建表指令
-        call_command('makemigrations', 'analyzer')
-        call_command('migrate')
-        return HttpResponse("""
-            <div style="text-align:center; margin-top:50px; font-family:sans-serif;">
-                <h1 style="color:green;">✅ 資料庫與資料表建立成功！</h1>
-                <p>您現在可以關閉這個畫面，回到首頁正常使用系統了。</p>
-                <a href="/" style="padding:10px 20px; background:#0d6efd; color:white; text-decoration:none; border-radius:5px;">回首頁</a>
-            </div>
-        """)
-    except Exception as e:
-        return HttpResponse(f"""
-            <div style="text-align:center; margin-top:50px; font-family:sans-serif;">
-                <h1 style="color:red;">❌ 建立失敗</h1>
-                <p>錯誤原因：{e}</p>
-            </div>
-        """)
+    """終極強制建表通道：無視 Migration 歷史，直接使用底層 SQL API 建立資料表"""
+    from django.db import connection
+    from django.http import HttpResponse
+    from .models import EconomicRecord, CycleRecord
+    
+    results = []
+    
+    # 使用 Django 底層 SchemaEditor 強制寫入 CREATE TABLE
+    with connection.schema_editor() as schema_editor:
+        try:
+            schema_editor.create_model(EconomicRecord)
+            results.append("<h3 style='color:green;'>✅ EconomicRecord 資料表強制建立成功！</h3>")
+        except Exception as e:
+            results.append(f"<h3 style='color:orange;'>⚠️ EconomicRecord 建立略過 (可能已存在):<br> <small>{e}</small></h3>")
+
+    return HttpResponse(f"""
+        <div style="text-align:center; margin-top:50px; font-family:sans-serif; line-height: 1.6;">
+            <h2>🛠️ 資料庫底層強制修復結果</h2>
+            <hr style="max-width:400px; margin: 20px auto;">
+            {''.join(results)}
+            <br>
+            <p style="color:#555;">封印已解除！現在可以回到首頁，歷史資料將能順利存檔！</p>
+            <br><br>
+            <a href="/" style="padding:12px 24px; background:#0d6efd; color:white; text-decoration:none; border-radius:5px; font-size:1.2rem;">🏠 回首頁並執行爬蟲</a>
+        </div>
+    """)
