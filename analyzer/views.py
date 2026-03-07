@@ -72,6 +72,30 @@ def economic_dashboard(request):
     # 3. JSON 輸出
     if request.GET.get('export') == 'json':
         return JsonResponse(results, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 4})
-        
+    
     # 4. 網頁渲染
+    
     return render(request, 'analyzer/dashboard.html', {'results': results})
+
+
+# 將這段加在 views.py 的最下面
+def setup_database(request):
+    """免付費 Shell 的終極秘密建表通道"""
+    try:
+        # 在背景自動執行建表指令
+        call_command('makemigrations', 'analyzer')
+        call_command('migrate')
+        return HttpResponse("""
+            <div style="text-align:center; margin-top:50px; font-family:sans-serif;">
+                <h1 style="color:green;">✅ 資料庫與資料表建立成功！</h1>
+                <p>您現在可以關閉這個畫面，回到首頁正常使用系統了。</p>
+                <a href="/" style="padding:10px 20px; background:#0d6efd; color:white; text-decoration:none; border-radius:5px;">回首頁</a>
+            </div>
+        """)
+    except Exception as e:
+        return HttpResponse(f"""
+            <div style="text-align:center; margin-top:50px; font-family:sans-serif;">
+                <h1 style="color:red;">❌ 建立失敗</h1>
+                <p>錯誤原因：{e}</p>
+            </div>
+        """)
