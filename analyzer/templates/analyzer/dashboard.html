@@ -11,79 +11,239 @@
         .data-card { border: none; border-radius: 10px; background-color: #ffffff; }
         .val-text { font-size: 1.1rem; font-weight: 700; color: #d9534f; margin-top: 5px; }
         .strategy-box { border-left: 5px solid #ffc107; background-color: #fffbe6; padding: 15px; border-radius: 8px;}
-        .details-list li { font-size: 0.85rem; color: #555; margin-bottom: 5px; }
+        .theory-box { background-color: #e9ecef; padding: 15px; border-radius: 8px; font-size: 0.9rem; color: #495057; line-height: 1.6; }
+        .theory-title { font-weight: 800; color: #212529; margin-bottom: 10px; border-bottom: 2px solid #adb5bd; padding-bottom: 5px;}
+        /* 讓頁籤在手機上可以橫向滑動 */
+        .nav-pills { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .nav-pills .nav-link { white-space: nowrap; font-weight: bold; border-radius: 20px; margin-right: 5px; color: #495057; background: #e9ecef; }
+        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
+        /* 隱藏捲軸 */
+        .nav-pills::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
-<div class="container py-4">
+<div class="container py-3">
+    
     {% if results.error %}
-    <div class="alert alert-danger">伺服器發生錯誤: {{ results.error }}</div>
+    <div class="alert alert-danger shadow-sm">伺服器發生錯誤: {{ results.error }}</div>
     {% else %}
     
-    <div class="card verdict-card shadow-sm mb-4">
-        <div class="card-body text-center py-4">
-            <h6 class="text-uppercase opacity-75">當前全球經濟週期 ({{ results.record_date }})</h6>
-            <h2 class="fw-bold my-3">{{ results.verdict }}</h2>
-            <p class="mb-0 small opacity-75">數據更新於：{{ results.timestamp }}</p>
-        </div>
+    {% if results.db_error %}
+    <div class="alert alert-warning shadow-sm small mb-3">
+        ⚠️ <b>注意：即時爬蟲已成功，但歷史資料存檔失敗！</b><br>錯誤原因：{{ results.db_error }}
     </div>
+    {% endif %}
 
-    <div class="strategy-box mb-4 shadow-sm">
-        <h6 class="fw-bold text-dark mb-2">💡 投資策略最高指導</h6>
-        <p class="mb-0 text-secondary" style="font-size: 0.95rem;">{{ results.strategy }}</p>
-    </div>
+    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill" data-bs-target="#pills-overview" type="button" role="tab">👑 終極統整</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-success" id="pills-recovery-tab" data-bs-toggle="pill" data-bs-target="#pills-recovery" type="button" role="tab">🌱 復甦期</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-info" id="pills-growth-tab" data-bs-toggle="pill" data-bs-target="#pills-growth" type="button" role="tab">📈 成長期</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-danger" id="pills-boom-tab" data-bs-toggle="pill" data-bs-target="#pills-boom" type="button" role="tab">🔥 榮景期</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-primary" id="pills-recession-tab" data-bs-toggle="pill" data-bs-target="#pills-recession" type="button" role="tab">🥶 衰退期</button>
+        </li>
+    </ul>
 
-    <h6 class="fw-bold mb-3 px-1">🎯 週期特徵觸發細節 (數據與敘述)</h6>
-    <div class="accordion mb-4 shadow-sm" id="scoreAccordion">
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#colRec">🌱 復甦特徵 ({{ results.scores.recovery }}/4)</button></h2>
-            <div id="colRec" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
-                <ul class="details-list mb-0">{% for d in results.details.recovery %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}</ul>
-            </div></div>
-        </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#colGro">📈 成長特徵 ({{ results.scores.growth }}/4)</button></h2>
-            <div id="colGro" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
-                <ul class="details-list mb-0">{% for d in results.details.growth %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}</ul>
-            </div></div>
-        </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#colBoom">🔥 榮景轉折警訊 ({{ results.scores.boom_warning }}/8)</button></h2>
-            <div id="colBoom" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
-                <ul class="details-list mb-0">{% for d in results.details.boom_warning %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}</ul>
-            </div></div>
-        </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#colRecess">🥶 衰退與落底 ({{ results.scores.recession }}/2，曙光 {{ results.scores.bottom }}/3)</button></h2>
-            <div id="colRecess" class="accordion-collapse collapse" data-bs-parent="#scoreAccordion"><div class="accordion-body">
-                <ul class="details-list mb-0">
-                    <b class="text-dark">衰退確認指標：</b>
-                    {% for d in results.details.recession %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}
-                    <b class="text-dark mt-2 d-block">落底曙光指標：</b>
-                    {% for d in results.details.bottom %}<li>{{ d }}</li>{% empty %}<li>無觸發條件</li>{% endfor %}
-                </ul>
-            </div></div>
-        </div>
-    </div>
-
-    <h6 class="mb-3 fw-bold px-1">📊 全時期 20 大指標最新數據面板</h6>
-    <div class="row g-2 mb-4">
-        {% for key, val in results.raw_data.items %}
-        <div class="col-6">
-            <div class="card data-card shadow-sm h-100">
-                <div class="card-body p-2 text-center">
-                    <div class="text-muted" style="font-size: 0.70rem;">{{ key }}</div>
-                    <div class="val-text">{{ val }}</div>
+    <div class="tab-content" id="pills-tabContent">
+        
+        <div class="tab-pane fade show active" id="pills-overview" role="tabpanel">
+            <div class="card verdict-card shadow-sm mb-3">
+                <div class="card-body text-center py-4">
+                    <h6 class="text-uppercase opacity-75">當前全球經濟週期 ({{ results.record_date }})</h6>
+                    <h2 class="fw-bold my-3">{{ results.verdict }}</h2>
+                    <p class="mb-0 small opacity-75">數據更新於：{{ results.timestamp }}</p>
                 </div>
             </div>
+
+            <div class="strategy-box mb-3 shadow-sm">
+                <h6 class="fw-bold text-dark mb-2">💡 投資策略最高指導</h6>
+                <p class="mb-0 text-secondary" style="font-size: 0.95rem;">{{ results.strategy }}</p>
+            </div>
+
+            <div class="accordion mb-4 shadow-sm" id="logicAccordion">
+                <div class="accordion-item border-0 rounded">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold bg-white text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLogic">
+                            📖 檢視【綜合決策樹判定邏輯】
+                        </button>
+                    </h2>
+                    <div id="collapseLogic" class="accordion-collapse collapse" data-bs-parent="#logicAccordion">
+                        <div class="accordion-body theory-box m-2">
+                            本系統會一次抓取並彙整四大週期的所有總經數據，透過以下階層式邏輯找出目前最符合的經濟狀態：<br><br>
+                            <b>1. 【衰退期優先判定】</b><br>
+                            - 若「實質個人消費(PCE)」大幅滑落 (<1%) 或「民間投資」轉負，即判定進入【衰退期】。<br>
+                            - 衰退期內若測得「PMI回升、零售反彈、投資Saar轉正」，則標示為【衰退期 - 底部反轉曙光】。<br><br>
+                            <b>2. 【榮景末期與轉折警報】</b><br>
+                            - 若未處於衰退，但榮景期 8 大警訊觸發達 4 項以上，或出現嚴重的「殖利率倒掛(T10Y2Y < 0)」且伴隨投資衰退，則判定為【榮景末期 / 轉折危機】。<br><br>
+                            <b>3. 【成長期判定】</b><br>
+                            - 若無衰退與轉折危機，且就業、投資、房地產、通膨等 4 項成長指標有 3 項達標，判定為穩健的【成長期】。<br><br>
+                            <b>4. 【復甦期判定】</b><br>
+                            - 若以上皆未強烈符合，但失業金人數下降、零售與耐久財呈現落底反彈，則判定為【復甦期】。<br><br>
+                            <b>5. 【過渡期】</b><br>
+                            - 若指標錯綜複雜、多空交戰，系統會標示為【週期過渡期 (Transition)】，建議多看少做。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="mb-2 fw-bold px-1">📊 全時期 20 大指標最新數據</h6>
+            <div class="row g-2 mb-4">
+                {% for key, val in results.raw_data.items %}
+                <div class="col-6">
+                    <div class="card data-card shadow-sm h-100 border">
+                        <div class="card-body p-2 text-center">
+                            <div class="text-muted" style="font-size: 0.70rem;">{{ key }}</div>
+                            <div class="val-text">{{ val }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        {% endfor %}
+
+        <div class="tab-pane fade" id="pills-recovery" role="tabpanel">
+            <div class="card border-success mb-3 shadow-sm">
+                <div class="card-header bg-success text-white fw-bold">
+                    🌱 復甦期觸發條件 ({{ results.scores.recovery }}/4)
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for d in results.details.recovery %}
+                        <li class="list-group-item text-success fw-bold" style="font-size:0.9rem;">✔️ {{ d }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted small">目前未觸發任何復甦期條件</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="theory-box mb-4">
+                <div class="theory-title">📖 復甦期理論與判斷說明</div>
+                <b>正確解讀 4 大現象，確認最壞情況已過：</b><br>
+                1. 貨幣政策寬鬆走向極致：聯邦基金利率、長期公債利率下滑，減輕負債並刺激投資。<br>
+                2. 財政刺激政策陸續推出：撐起消費與投資信心。<br>
+                3. 油價和原物料價格處於谷底：形同實質減稅，刺激民眾消費需求。<br>
+                4. 經濟數據都已走到極低基期：低基期走完後，數據將顯著反彈。<br><br>
+                <b>判斷復甦期關鍵 4 指標：</b><br>
+                • 就業：「初領失業救濟金人數」由高點反轉下降。<br>
+                • 消費：「零售銷售」與「個人耐久財消費」提早落底反彈。<br>
+                • 投資：「製造業耐久財新訂單」走出低迷，不再惡化。<br>
+                • 進出口：「進口金額年增率」從低基期反轉回溫。<br><br>
+                <b>🎯 投資策略 (風險低、報酬高)：</b><br>
+                此時股市已被相對低估，應勇敢錢進股市，放大曝險！將無風險債券獲利了結，適度轉入高收益債或布局短線原物料。黃金應考慮出清。
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-growth" role="tabpanel">
+            <div class="card border-info mb-3 shadow-sm">
+                <div class="card-header bg-info text-white fw-bold">
+                    📈 成長期觸發條件 ({{ results.scores.growth }}/4)
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for d in results.details.growth %}
+                        <li class="list-group-item text-info fw-bold" style="font-size:0.9rem;">✔️ {{ d }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted small">目前未觸發任何成長期條件</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="theory-box mb-4">
+                <div class="theory-title">📖 成長期理論與判斷說明</div>
+                <b>觀察關鍵 4 大現象，確認景氣進入穩定增長期：</b><br>
+                1. 撙節開支結束，遞延消費挹注內需動能成長。<br>
+                2. 就業增長顯著改善，民間消費穩定擴增。<br>
+                3. 民間投資擴張，迎來固定資本投入與房地產熱潮。<br>
+                4. 通膨回升至可持續增長水準 (1.5%~4%)，鞏固消費與投資信心。<br><br>
+                <b>💡 常見迷思：</b><br>
+                害怕景氣驟然轉向。事實上，只要經濟增長的巨輪開始轉動，民間投資和消費動能鞏固後，就不容易因偶發風險因子轉向。<br><br>
+                <b>🎯 投資策略：</b><br>
+                • 股市：看似昂貴其實不貴，企業獲利不斷增長為最大支撐。策略為「持續買進與持有風險資產」。<br>
+                • 高收益債：違約率維持穩定低檔，可持續買進持有。<br>
+                • 無風險債券：升息循環使價格下降，應避免持有，建議轉出。<br>
+                • 原物料：初期價格上揚，後期則會因高油價排擠消費而走跌。
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-boom" role="tabpanel">
+            <div class="card border-danger mb-3 shadow-sm">
+                <div class="card-header bg-danger text-white fw-bold">
+                    🔥 榮景轉折警訊觸發條件 ({{ results.scores.boom_warning }}/8)
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for d in results.details.boom_warning %}
+                        <li class="list-group-item text-danger fw-bold" style="font-size:0.9rem;">🚨 {{ d }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted small">目前未觸發任何榮景轉折警訊，擴張依舊健康</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="theory-box mb-4">
+                <div class="theory-title">📖 榮景期理論與判斷說明</div>
+                景氣擴張最迷人時期，過度熱絡後走向盛極而衰。特徵包含：景氣加速成長、資本市場熱絡、樂觀情緒高昂、風險意識極低。<br><br>
+                <b>解讀 8 大指標，確立榮景期起訖關鍵點：</b><br>
+                1. 殖利率曲線倒掛 (T10Y2Y < 0)：意味瘋狂的末升段即將到來。<br>
+                2. 初領失業金人數：U型結構確立 (自谷底反彈翹起)，可預測衰退期將至。<br>
+                3. 民間消費：零售銷售領先整體個人消費支出 (PCE) 下滑。<br>
+                4. 消費者信心指數：若顯著自高點滑落，則為警訊。<br>
+                5. 民間投資：第 2 次耐久財支出暴衝期預告尾聲，隨後衰退。<br>
+                6. 政府支出：地方政府支出年增率顯著增加後轉向。<br>
+                7. 庫存增減：庫存銷售比攀升，面臨供過於求壓力。<br>
+                8. 債務違約率：消費與企業貸款違約率雙雙顯著攀升 (雙破表)。<br><br>
+                <b>🎯 高階資產配置策略：</b><br>
+                • 股市：面臨高風險，但末升段往往伴隨驚人報酬。依循高階模式逐年調降持股，切忌全空，持股最低水位應保持 30%。<br>
+                • 無風險債券：在榮景期中後期，長債會迎來「再修正」的末跌段，此時正是布局長天期公債的【最佳甜蜜點】。
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-recession" role="tabpanel">
+            <div class="card border-primary mb-3 shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold">
+                    🥶 衰退與落底條件 (衰退:{{ results.scores.recession }}/2，落底:{{ results.scores.bottom }}/3)
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-light text-dark fw-bold small">【衰退確認指標】</li>
+                    {% for d in results.details.recession %}
+                        <li class="list-group-item text-primary fw-bold" style="font-size:0.9rem;">🚨 {{ d }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted small">未確認陷入衰退</li>
+                    {% endfor %}
+                    
+                    <li class="list-group-item bg-light text-dark fw-bold small">【落底曙光指標】</li>
+                    {% for d in results.details.bottom %}
+                        <li class="list-group-item text-success fw-bold" style="font-size:0.9rem;">🌱 {{ d }}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted small">無落底反轉跡象</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="theory-box mb-4">
+                <div class="theory-title">📖 衰退期理論與判斷說明</div>
+                景氣從榮景期走入衰退期，是景氣循環的必經過程。市場充斥悲觀氛圍、資本市場急凍。<br><br>
+                <b>緊盯 2 數據，確認衰退期是否來臨：</b><br>
+                1. 個人消費支出 (PCE)：出現「2 次消費陡降」(基期走低後仍繼續下修，小於1%)。<br>
+                2. 民間投資年增率 (GPDIC1)：比經濟成長率更早反轉，並出現超過 10% 以上的雙位數深度衰退。<br><br>
+                <b>留意 3 指標低檔反轉，簡易判斷景氣落底 (曙光)：</b><br>
+                1. 民間投資 (季增年率 Saar)：只要季增年率開始好轉，意味短期衰退動能消退，景氣谷底浮現。<br>
+                2. 民間消費 (零售銷售)：月增年率或 YoY 提早反彈，是景氣落底轉強的基石。<br>
+                3. 採購經理人指數 (PMI)：在底部出現反彈跡象，暗示擴張倒數計時。<br><br>
+                <b>🎯 絕佳投資策略：</b><br>
+                • 債市 (避風港)：無風險公債會走出一波長多走勢。<br>
+                • 股市 (入市時機)：分批布局、把氣拉長。採用「U型扣款」定期定額向下買進，降低成本，切勿在低檔殺出！<br>
+                • 美元：避險心態會推升美元升值，為保全資產的必要手段。
+            </div>
+        </div>
+
     </div>
 
-    <div class="d-grid gap-2 mb-5">
+    <div class="d-grid gap-2 mb-5 mt-2">
         <a href="?date={{ results.record_date }}&export=json" class="btn btn-dark btn-lg shadow-sm">📥 匯出此紀錄 (JSON)</a>
         <a href="?refresh=true" class="btn btn-outline-primary">🔄 重新執行即時爬蟲</a>
-        <a href="{% url 'home' %}" class="btn btn-link text-secondary">回首頁</a>
+        <a href="{% url 'home' %}" class="btn btn-link text-secondary">🏠 回首頁選擇歷史紀錄</a>
     </div>
 
     {% endif %}
