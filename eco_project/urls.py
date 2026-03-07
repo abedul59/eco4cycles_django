@@ -22,4 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),  # 將首頁 (空白路徑) 指向 views.home
     path('economic-dashboard/', views.economic_dashboard, name='dashboard')
+    # 🌟 新增這行：秘密建表通道
+    path('setup-db/', views.setup_database, name='setup_db'),
 ]
