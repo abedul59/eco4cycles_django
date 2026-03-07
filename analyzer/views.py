@@ -9,15 +9,18 @@ logger = logging.getLogger(__name__)
 
 def home(request):
     try:
-        # 嘗試取得歷史日期清單供首頁下拉選單使用
         history_dates = EconomicRecord.objects.values_list('date', flat=True).order_by('-date')
         dates_list = list(history_dates)
+        db_status = "ok"
     except Exception as e:
-        # 【防呆機制】如果資料庫還沒建好，攔截錯誤，回傳空清單，保證首頁不崩潰
-        print(f"資料庫尚未建立或讀取失敗: {e}")
+        # 將錯誤抓出來，傳給前端顯示
         dates_list = []
+        db_status = str(e)
         
-    return render(request, 'analyzer/home.html', {'history_dates': dates_list})
+    return render(request, 'analyzer/home.html', {
+        'history_dates': dates_list, 
+        'db_status': db_status
+    })
 
 
 def economic_dashboard(request):
@@ -27,7 +30,7 @@ def economic_dashboard(request):
     
     results = None
 
-    # 1. 如果使用者選擇了歷史日期，且沒有強制更新
+    # 1. 嘗試讀取歷史紀錄
     if selected_date and not force_refresh:
         try:
             record = EconomicRecord.objects.get(date=selected_date)
@@ -41,13 +44,12 @@ def economic_dashboard(request):
                 "record_date": str(record.date)
             }
         except Exception as e:
-            print(f"無法讀取該日歷史紀錄，轉為即時爬蟲: {e}")
+            print(f"無法讀取該日歷史紀錄: {e}")
 
-    # 2. 如果找不到紀錄、沒有選擇日期、或是強制要求最新資料
+    # 2. 如果沒有歷史紀錄，執行即時爬蟲
     if not results:
         results = get_comprehensive_data(api_key)
         
-        # 爬蟲成功沒有報錯的話，嘗試存入資料庫
         if "error" not in results:
             try:
                 today = timezone.localtime().date()
@@ -63,13 +65,13 @@ def economic_dashboard(request):
                 )
                 results['record_date'] = str(today)
             except Exception as e:
-                # 【防呆機制】存不進去就算了，直接顯示最新運算結果，絕不崩潰
-                print(f"資料庫寫入失敗: {e}")
+                # 寫入失敗時，把錯誤存進 results 傳給網頁
+                results['db_error'] = str(e)
                 results['record_date'] = str(timezone.localtime().date())
 
-    # 3. 處理 JSON 輸出
+    # 3. JSON 輸出
     if request.GET.get('export') == 'json':
         return JsonResponse(results, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 4})
         
-    # 4. 正常網頁渲染
+    # 4. 網頁渲染
     return render(request, 'analyzer/dashboard.html', {'results': results})
